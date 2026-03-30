@@ -21,7 +21,7 @@ body{
 
 .overlay{
     position: fixed;
-    background: url(3.jpg);
+    background: url(image/3.jpg);
     background-size: 1536px 745px;
     top: 0;
     left: 0;
@@ -159,7 +159,7 @@ button{
     width: 3.75rem;
     height: 95%;
     border-radius: 10px;
-    background: url(tk.jpeg);
+    background: url(image/tk.jpeg);
     transition: all 0.4s;
     background-size: 25rem;
     background-position: 0px;
@@ -333,7 +333,7 @@ body.open a > button > span{
     }
 
     .overlay{
-        background: url(sm.jpg);
+        background: url(image/sm.jpg);
         background-size: cover;
     }    
 
