@@ -44,6 +44,32 @@ class Trie {
     }
 }
 
+// ─── PERSISTENCE: load / save custom searches via localStorage ──────────────
+
+const STORAGE_KEY = 'trieCustomSearches';
+
+function loadCustomSearches() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+}
+
+function saveCustomSearch(term) {
+    const clean = term.trim().toLowerCase();
+    if (!clean || clean.length < 2) return;
+    const store = loadCustomSearches();
+    store[clean] = (store[clean] || 0) + 1; // track how many times searched
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
+}
+
+// Inserts all previously searched terms back into the Trie on load
+function seedCustomSearches(trie) {
+    const store = loadCustomSearches();
+    for (const [term, count] of Object.entries(store)) {
+        // Base 60 + bonus up to 30 so personal terms float near top
+        trie.insert(term, 60 + Math.min(count * 5, 30));
+    }
+}
+
 // ─── SEED THE TRIE WITH POPULAR SEARCHES ───────────────────────────────────
 
 const searchTrie = new Trie();
@@ -373,6 +399,9 @@ const popularSearches = [
 
 popularSearches.forEach(([term, freq]) => searchTrie.insert(term, freq));
 
+// Re-insert any terms the user has personally searched before
+seedCustomSearches(searchTrie);
+
 // ─── AUTOCOMPLETE UI ────────────────────────────────────────────────────────
 
 function setupSearchAutocomplete() {
@@ -463,6 +492,7 @@ function setupSearchAutocomplete() {
             li.addEventListener('mousedown', (e) => {
                 e.preventDefault(); // prevent blur before click
                 input.value = suggestion;
+                saveCustomSearch(suggestion);
                 hideDropdown();
                 form.submit();
             });
@@ -526,6 +556,7 @@ function setupSearchAutocomplete() {
             if (activeIndex >= 0) {
                 e.preventDefault();
                 input.value = items[activeIndex].querySelector('span:last-child').textContent.trim();
+                saveCustomSearch(input.value);
                 hideDropdown();
                 form.submit();
             }
@@ -535,6 +566,12 @@ function setupSearchAutocomplete() {
     // Hide on outside click
     document.addEventListener('click', (e) => {
         if (!form.contains(e.target)) hideDropdown();
+    });
+
+    // Save & learn any search submitted directly (typed + Enter, or search button click)
+    form.addEventListener('submit', () => {
+        const val = input.value.trim();
+        if (val) saveCustomSearch(val);
     });
 
     // Show again on focus if there's a value
